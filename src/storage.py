@@ -356,12 +356,12 @@ class DataStorage:
 class Database:
     """SQLite database for voter data with verification support."""
     
-    def __init__(self, db_path: str = 'data/voters.db'):
+    def __init__(self, db_path: str = 'data/electoral_roll.db'):
         """
         Initialize database connection.
         
         Args:
-            db_path: Path to SQLite database file
+            db_path: Path to SQLite database file (default: data/electoral_roll.db)
         """
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)

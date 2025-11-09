@@ -73,17 +73,19 @@ The official CEO West Bengal website presents several challenges for data access
 - ✅ **100% API success rate** for metadata collection
 - ✅ **~5,100 voters/minute** extraction speed
 
-For detailed analytics, see **[ANALYTICS.md](ANALYTICS.md)**
+For detailed analytics, see **[ANALYTICS.md](docs/ANALYTICS.md)**
 
 ## 📚 Documentation
 
 | Document | Description |
 |----------|-------------|
-| **[SETUP_GUIDE.md](SETUP_GUIDE.md)** | Complete setup instructions, prerequisites, troubleshooting |
-| **[ANALYTICS.md](ANALYTICS.md)** | Detailed statistics, performance metrics, data quality analysis |
+| **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)** | Complete setup instructions, prerequisites, troubleshooting |
+| **[ANALYTICS.md](docs/ANALYTICS.md)** | Detailed statistics, performance metrics, data quality analysis |
+| **[API_VERIFICATION_GUIDE.md](docs/API_VERIFICATION_GUIDE.md)** | API verification system usage and reference |
+| **[IMPLEMENTATION_SUMMARY.md](docs/IMPLEMENTATION_SUMMARY.md)** | Implementation details and feature overview |
+| **[REPOSITORY_SUMMARY.md](docs/REPOSITORY_SUMMARY.md)** | Technical overview, architecture, and codebase structure |
 | **[API.md](docs/API.md)** | ECI Gateway API reference and usage guide |
 | **[PDF_FORMAT.md](docs/PDF_FORMAT.md)** | PDF structure, CID font decoding, extraction techniques |
-| **[REPOSITORY_SUMMARY.md](REPOSITORY_SUMMARY.md)** | Technical overview, architecture, and codebase structure |
 | **[LICENSE](LICENSE)** | MIT License with data privacy notice |
 
 ## 📈 Analytics Summary
@@ -123,7 +125,7 @@ Based on AC_139 statistics:
 - **Total Storage**: ~200 GB for complete dataset
 - **Processing Time**: ~220 hours for all 294 assemblies
 
-*For complete analytics including data quality analysis, demographic insights, and technical metrics, see **[ANALYTICS.md](ANALYTICS.md)***
+*For complete analytics including data quality analysis, demographic insights, and technical metrics, see **[ANALYTICS.md](docs/ANALYTICS.md)***
 
 ## 🏗️ Architecture
 
@@ -153,6 +155,20 @@ Based on AC_139 statistics:
 - **API Validation**: Cross-verify with official ECI data
 - **Web Dashboard**: Interactive interface for data exploration
 - **Modular Design**: Easy to extend and customize
+
+## 📂 Data Directory
+
+**⚠️ Important:** The `data/` directory contains voter and personal information and is **NOT committed to Git**.
+
+All downloaded PDFs, API metadata, and databases are stored in organized subdirectories:
+- `data/downloaded_pdfs/ALL/` - Electoral roll PDFs from CEO West Bengal
+- `data/api_metadata/api/` - JSON files with district/AC/part metadata
+- `data/reference_docs/other-pdfs/` - Official forms and reference documents
+- `data/electoral_roll.db` - SQLite database with extracted voter data
+
+**See [data/README.md](data/README.md) for complete documentation.**
+
+These directories are protected by `.gitignore` to prevent accidental commits of sensitive data.
 
 ## 🚀 Quick Start
 
@@ -273,9 +289,21 @@ wb-electoral-data/
 │   ├── config.yaml        # Main configuration
 │   └── config.example.yaml
 ├── docs/
+│   ├── SETUP_GUIDE.md     # Setup instructions
+│   ├── ANALYTICS.md       # Statistics and analytics
+│   ├── API_VERIFICATION_GUIDE.md  # API verification guide
 │   ├── API.md             # API documentation
 │   ├── PDF_FORMAT.md      # PDF structure details
-│   └── DEVELOPMENT.md     # Development guide
+│   └── REPOSITORY_SUMMARY.md      # Architecture overview
+├── data/                  # Data directory (NOT in Git)
+│   ├── downloaded_pdfs/   # Electoral roll PDFs
+│   │   └── ALL/           # Organized by District/AC/Part
+│   ├── api_metadata/      # API metadata JSON files
+│   │   └── api/           # District/AC metadata
+│   ├── reference_docs/    # Official forms and docs
+│   │   └── other-pdfs/    # Reference PDFs
+│   ├── electoral_roll.db  # SQLite database
+│   └── README.md          # Data directory documentation
 ├── tests/
 │   ├── test_downloader.py
 │   ├── test_extractor.py
@@ -375,7 +403,7 @@ Contributions are welcome! We appreciate help with:
 - 🌐 Internationalization and localization
 
 **Before contributing**, please:
-1. Read **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for development setup
+1. Read **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)** for development setup
 2. Check existing issues and pull requests
 3. Follow the coding standards (PEP 8, Black formatting)
 4. Add tests for new features
@@ -429,7 +457,7 @@ python web/app.py
 - **Monitoring**: Prometheus + Grafana
 - **Containerization**: Docker + Docker Compose
 
-See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed deployment instructions.
+See **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)** for detailed deployment instructions.
 
 ## 📝 License
 
@@ -452,7 +480,7 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 ## 📧 Contact & Support
 
 ### Get Help
-- 📖 **Documentation**: Check [SETUP_GUIDE.md](SETUP_GUIDE.md) for setup issues
+- 📖 **Documentation**: Check [SETUP_GUIDE.md](docs/SETUP_GUIDE.md) for setup issues
 - 🐛 **Bug Reports**: Open an issue on GitHub with detailed description
 - 💡 **Feature Requests**: Submit an issue with "enhancement" label
 - 💬 **Discussions**: Use GitHub Discussions for questions and ideas
@@ -470,11 +498,11 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 - [Election Commission of India](https://eci.gov.in) - National Electoral Body
 
 ### Documentation
-- [Setup Guide](SETUP_GUIDE.md) - Installation and configuration
-- [Analytics Report](ANALYTICS.md) - Data statistics and insights
+- [Setup Guide](docs/SETUP_GUIDE.md) - Installation and configuration
+- [Analytics Report](docs/ANALYTICS.md) - Data statistics and insights
 - [API Documentation](docs/API.md) - ECI Gateway API reference
 - [PDF Format Guide](docs/PDF_FORMAT.md) - PDF structure and decoding
-- [Repository Summary](REPOSITORY_SUMMARY.md) - Technical overview
+- [Repository Summary](docs/REPOSITORY_SUMMARY.md) - Technical overview
 
 ### Related Projects
 - Electoral roll analysis tools for other Indian states
@@ -494,7 +522,7 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 
 *Empowering transparency and research through open electoral data*
 
-**[Documentation](SETUP_GUIDE.md)** • **[Analytics](ANALYTICS.md)** • **[API Reference](docs/API.md)** • **[License](LICENSE)**
+**[Documentation](docs/SETUP_GUIDE.md)** • **[Analytics](docs/ANALYTICS.md)** • **[API Reference](docs/API.md)** • **[License](LICENSE)**
 
 </div>
 

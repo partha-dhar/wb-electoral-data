@@ -291,8 +291,8 @@ def main():
     )
     parser.add_argument(
         '--db-path',
-        default='data/voters.db',
-        help='Path to SQLite database'
+        default='data/electoral_roll.db',
+        help='Path to SQLite database (default: data/electoral_roll.db)'
     )
     parser.add_argument(
         '--delay',

@@ -55,7 +55,7 @@ This represents comprehensive coverage of all polling booths across West Bengal.
 The 61,531 polling parts are distributed across 21 districts, organized in the following structure:
 
 ```
-api/
+data/api_metadata/api/
 ├── DIST_01/
 │   ├── AC_001/
 │   │   ├── parts.json (list of polling parts)

@@ -35,7 +35,6 @@ ENV/
 .DS_Store
 
 # Data directories (DO NOT COMMIT DATA)
-data/
 pdfs/
 output/
 downloads/
@@ -43,6 +42,13 @@ downloads/
 *.db
 *.sqlite
 *.sqlite3
+
+# Data directories with voter/personal information (NEVER COMMIT)
+# Ignore data/ directory but track structure via .gitkeep and README.md
+data/
+!data/README.md
+!data/*/.gitkeep
+!data/**/.gitkeep
 
 # Logs
 *.log

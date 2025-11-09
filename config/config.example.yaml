@@ -4,10 +4,13 @@
 # Data directories (will be created automatically)
 directories:
   data_dir: ./data
-  pdf_dir: ./data/pdfs
+  pdf_dir: ./data/downloaded_pdfs
+  api_dir: ./data/api_metadata
+  reference_dir: ./data/reference_docs
   output_dir: ./data/output
   cache_dir: ./data/cache
   logs_dir: ./logs
+  db_path: ./data/electoral_roll.db
 
 # Source website configuration
 source:
