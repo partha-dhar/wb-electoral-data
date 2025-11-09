@@ -1,13 +1,14 @@
 """
 Data Storage Module
-Handles storing voter data in JSON/YAML format
+Handles storing voter data in JSON/YAML format and SQLite database
 """
 
 import json
 import yaml
 import logging
+import sqlite3
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 import gzip
 
@@ -350,3 +351,180 @@ class DataStorage:
         
         self.logger.info(f"Created index with {index['total_files']} files")
         return index
+
+
+class Database:
+    """SQLite database for voter data with verification support."""
+    
+    def __init__(self, db_path: str = 'data/voters.db'):
+        """
+        Initialize database connection.
+        
+        Args:
+            db_path: Path to SQLite database file
+        """
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        self.conn = sqlite3.connect(self.db_path)
+        self.cursor = self.conn.cursor()
+        self.logger = logging.getLogger(__name__)
+        
+        self._create_tables()
+    
+    def _create_tables(self):
+        """Create database tables if they don't exist."""
+        # Main voters table
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS voters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                epic_number TEXT,
+                ac_number INTEGER,
+                part_number INTEGER,
+                serial_number INTEGER,
+                name TEXT,
+                age INTEGER,
+                gender TEXT,
+                relation_type TEXT,
+                relation_name TEXT,
+                address TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                verified BOOLEAN DEFAULT NULL,
+                verification_date TIMESTAMP DEFAULT NULL,
+                api_data TEXT DEFAULT NULL,
+                UNIQUE(epic_number, ac_number, part_number, serial_number)
+            )
+        """)
+        
+        # Index for faster lookups
+        self.cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_ac_part_serial 
+            ON voters(ac_number, part_number, serial_number)
+        """)
+        
+        self.cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_epic 
+            ON voters(epic_number)
+        """)
+        
+        self.cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_verified 
+            ON voters(verified)
+        """)
+        
+        self.conn.commit()
+        self.logger.info("Database tables initialized")
+    
+    def insert_voter(self, voter_data: Dict[str, Any]) -> Optional[int]:
+        """
+        Insert a voter record.
+        
+        Args:
+            voter_data: Dictionary with voter information
+        
+        Returns:
+            Inserted row ID or None if already exists
+        """
+        try:
+            self.cursor.execute("""
+                INSERT INTO voters (
+                    epic_number, ac_number, part_number, serial_number,
+                    name, age, gender, relation_type, relation_name, address
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                voter_data.get('epic_number'),
+                voter_data.get('ac_number'),
+                voter_data.get('part_number'),
+                voter_data.get('serial_number'),
+                voter_data.get('name'),
+                voter_data.get('age'),
+                voter_data.get('gender'),
+                voter_data.get('relation_type'),
+                voter_data.get('relation_name'),
+                voter_data.get('address')
+            ))
+            return self.cursor.lastrowid
+        except sqlite3.IntegrityError:
+            # Voter already exists
+            return None
+    
+    def get_voters_by_ac(self, ac_number: int) -> List[Tuple]:
+        """
+        Get all voters for an assembly constituency.
+        
+        Args:
+            ac_number: Assembly constituency number
+        
+        Returns:
+            List of voter tuples (id, epic, part_no, serial_no, age, ...)
+        """
+        self.cursor.execute("""
+            SELECT id, epic_number, part_number, serial_number, age, 
+                   name, gender, verified
+            FROM voters
+            WHERE ac_number = ?
+            ORDER BY part_number, serial_number
+        """, (ac_number,))
+        return self.cursor.fetchall()
+    
+    def mark_voter_verified(
+        self, 
+        voter_id: int, 
+        verified: bool, 
+        api_data: Optional[Dict] = None
+    ):
+        """
+        Mark a voter as verified with API data.
+        
+        Args:
+            voter_id: Voter database ID
+            verified: Whether verification was successful
+            api_data: Optional API response data
+        """
+        api_json = json.dumps(api_data) if api_data else None
+        
+        self.cursor.execute("""
+            UPDATE voters 
+            SET verified = ?, 
+                verification_date = CURRENT_TIMESTAMP,
+                api_data = ?
+            WHERE id = ?
+        """, (verified, api_json, voter_id))
+    
+    def get_verification_stats(self, ac_number: Optional[int] = None) -> Dict:
+        """
+        Get verification statistics.
+        
+        Args:
+            ac_number: Optional AC number filter
+        
+        Returns:
+            Statistics dictionary
+        """
+        where_clause = "WHERE ac_number = ?" if ac_number else ""
+        params = (ac_number,) if ac_number else ()
+        
+        self.cursor.execute(f"""
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN verified = 1 THEN 1 ELSE 0 END) as verified,
+                SUM(CASE WHEN verified = 0 THEN 1 ELSE 0 END) as not_verified,
+                SUM(CASE WHEN verified IS NULL THEN 1 ELSE 0 END) as pending
+            FROM voters
+            {where_clause}
+        """, params)
+        
+        row = self.cursor.fetchone()
+        return {
+            'total': row[0],
+            'verified': row[1] or 0,
+            'not_verified': row[2] or 0,
+            'pending': row[3] or 0
+        }
+    
+    def close(self):
+        """Close database connection."""
+        self.conn.commit()
+        self.conn.close()
+        self.logger.info("Database connection closed")
+

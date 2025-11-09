@@ -416,6 +416,86 @@ The infrastructure is ready for scaling to cover all 294 assemblies and potentia
 
 ---
 
+## API Verification Capability (NEW!)
+
+### ECI Individual Voter API Discovery
+
+We've discovered an ECI API endpoint that returns **individual voter data** (not just metadata):
+
+**API Endpoint**: `https://gateway-s2-blo.eci.gov.in/api/v1/elastic-sir/get-eroll-data-2003`
+
+#### Key Findings:
+
+1. **No Authentication Required** ✅
+   - Works WITHOUT Bearer token!
+   - Only requires basic headers (CurrentRole: citizen, PLATFORM-TYPE: ECIWEB)
+   - Accessible for public verification purposes
+
+2. **Request Format**:
+   ```json
+   POST /api/v1/elastic-sir/get-eroll-data-2003
+   {
+     "oldStateCd": "S25",
+     "oldAcNo": "139",
+     "oldPartNo": "1",
+     "oldPartSerialNo": "1"
+   }
+   ```
+
+3. **Response Structure**:
+   ```json
+   {
+     "status": "Success",
+     "statusCode": 200,
+     "message": "Record Found Successfully",
+     "payload": [{
+       "epicNumber": "WB/20/139/000214",
+       "age": "47",
+       "oldAcName": "BELGACHIA EAST",
+       "oldPartName": "St.Marrys Orphanage",
+       "gender": "",
+       "firstName": "",
+       "lastName": ""
+     }]
+   }
+   ```
+
+4. **Data Limitations** ⚠️
+   - **Names are empty/missing** in most responses (CID encoding issue at API level)
+   - Age and EPIC data is present
+   - AC/Part/Serial metadata is complete
+   - Gender field is often empty
+
+5. **Rate Limiting**:
+   - **Burst Capacity**: 50 requests
+   - **Replenish Rate**: 50 requests/second
+   - We use 2 requests/second to be conservative
+
+#### Use Case: Verification, Not Extraction
+
+**Decision**: Keep PDF extraction as primary method, use API for verification only
+
+**Why?**
+- ✅ **PDF Extraction**: Complete data (names, addresses, all fields)
+- ⚠️ **API**: Incomplete data (missing names, limited fields)
+- 💡 **Best Practice**: Extract from PDFs, verify with API
+
+**Implementation**: `scripts/verify_with_api.py`
+- Fetches voter data from API for each serial number
+- Compares EPIC numbers and ages
+- Updates database with verification status
+- Tracks: verified, not_found, mismatched records
+
+#### Verification Statistics
+
+Once verification is run on extracted data, statistics will include:
+- Total voters verified
+- Match rate with API data
+- Data quality comparison (PDF vs API)
+- Field-level completeness analysis
+
+---
+
 ## Data Attribution
 
 - **Data Source**: Election Commission of India (ECI)
@@ -430,12 +510,13 @@ The infrastructure is ready for scaling to cover all 294 assemblies and potentia
 ## References
 
 - CEO West Bengal: https://ceowestbengal.nic.in
-- ECI Gateway API: https://electoralsearch.eci.gov.in
+- ECI Gateway API (Metadata): https://electoralsearch.eci.gov.in
+- ECI Gateway API (Voter Data): https://gateway-s2-blo.eci.gov.in
 - GitHub Repository: https://github.com/partha-dhar/wb-electoral-data
 - Project Documentation: See `docs/` folder
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: November 2025*
 *Data as of: SIR 2025*
 *Next Update: After full state extraction*

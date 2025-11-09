@@ -216,7 +216,29 @@ python scripts/validate_data.py --ac 139
 python scripts/validate_data.py --ac 139 --report
 ```
 
-#### 4. Web Interface
+#### 4. Verify with API (New!)
+
+```bash
+# Verify extracted voters using ECI's individual voter API
+# Note: API has incomplete data, used only for verification
+python scripts/verify_with_api.py --ac 139
+
+# Custom delay between API calls (default: 0.5s)
+python scripts/verify_with_api.py --ac 139 --delay 1.0
+
+# View verification statistics
+python scripts/verify_with_api.py --ac 139 --batch-size 50
+```
+
+**Why API Verification?**
+- The ECI API endpoint (`get-eroll-data-2003`) returns individual voter data
+- **No Bearer token required** - Works with basic headers only!
+- Used for **verification purposes** as API data is incomplete (missing names)
+- **Primary method remains PDF extraction** for complete data
+- Verification results stored in SQLite database
+- Rate limited: 50 requests/second (we use 2/second to be safe)
+
+#### 5. Web Interface
 
 ```bash
 # Start web server
@@ -235,12 +257,13 @@ wb-electoral-data/
 │   ├── extractor.py       # Text extraction with CID decoding
 │   ├── parser.py          # Voter data parsing
 │   ├── validator.py       # ECI API validation
-│   ├── storage.py         # JSON/YAML storage
+│   ├── storage.py         # JSON/YAML storage & SQLite DB
 │   └── utils.py           # Helper functions
 ├── scripts/
 │   ├── download_pdfs.py   # CLI for downloading
 │   ├── extract_voters.py  # CLI for extraction
 │   ├── validate_data.py   # CLI for validation
+│   ├── verify_with_api.py # API verification (NEW!)
 │   └── fetch_metadata.py  # Fetch district/AC metadata
 ├── web/
 │   ├── app.py             # Flask web application
