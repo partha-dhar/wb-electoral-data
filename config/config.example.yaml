@@ -1,0 +1,133 @@
+# West Bengal Electoral Data - Configuration File
+# Copy this file to config.yaml and customize as needed
+
+# Data directories (will be created automatically)
+directories:
+  data_dir: ./data
+  pdf_dir: ./data/pdfs
+  output_dir: ./data/output
+  cache_dir: ./data/cache
+  logs_dir: ./logs
+
+# Source website configuration
+source:
+  base_url: https://ceowestbengal.nic.in
+  # Add specific endpoints here as discovered
+  
+# ECI Gateway API configuration
+eci_api:
+  base_url: https://gateway-voters.eci.gov.in/api/v1/citizen/sir
+  state_code: S25
+  headers:
+    PLATFORM-TYPE: ECIWEB
+    applicationName: VSP
+    state: S25
+  timeout: 30
+  retry_attempts: 3
+  retry_delay: 2.0
+
+# Download settings
+download:
+  concurrent_downloads: 5
+  chunk_size: 8192
+  retry_attempts: 3
+  retry_delay: 1.0
+  user_agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+  ssl_verify: true
+  resume_downloads: true
+
+# PDF extraction settings
+extraction:
+  # CID character mappings (from actual PDFs)
+  cid_mappings:
+    cid:17: "."
+    cid:18: "/"
+    # Add more as discovered
+  
+  # Character transformations
+  char_mappings:
+    D: a
+    E: b
+    F: c
+    G: d
+    H: e
+    I: f
+    J: g
+    K: h
+    L: i
+    M: j
+    N: k
+    O: l
+    P: m
+    Q: n
+    R: o
+    S: p
+    T: q
+    U: r
+    V: s
+    W: t
+    X: u
+    Y: v
+    Z: w
+    $: A
+    "%": B
+    "&": C
+    "*": G
+    ":": W
+  
+  # Parsing options
+  skip_blank_lines: true
+  trim_whitespace: true
+  min_age: 18
+  max_age: 120
+
+# Validation settings
+validation:
+  enable_api_validation: true
+  sample_size: 100  # Number of records to validate per part
+  match_threshold: 0.95  # 95% match required
+  compare_fields:
+    - epic_no
+    - name
+    - age
+    - gender
+
+# Storage settings
+storage:
+  format: json  # json or yaml
+  indent: 2
+  ensure_ascii: false
+  pretty_print: true
+  compression: false  # Enable gzip compression
+  
+# Logging configuration
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_logging: true
+  console_logging: true
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# Web interface settings
+web:
+  host: 0.0.0.0
+  port: 5000
+  debug: false
+  secret_key: change-this-secret-key-in-production
+  max_results_per_page: 50
+  enable_cors: true
+
+# Performance settings
+performance:
+  max_workers: 4
+  batch_size: 100
+  cache_ttl: 3600  # 1 hour
+  memory_limit: 2048  # MB
+
+# West Bengal specific data
+west_bengal:
+  total_districts: 21
+  total_assemblies: 294
+  state_code: S25
+  state_name: West Bengal

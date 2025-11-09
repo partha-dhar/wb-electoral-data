@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>West Bengal Electoral Data</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            font-size: 1.1em;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            color: #667eea;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        .voter-card {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .voter-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .voter-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            color: #666;
+        }
+        
+        .info-item {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .page-btn {
+            padding: 8px 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗳️ West Bengal Electoral Data</h1>
+        <p class="subtitle">Browse, search, and validate electoral roll information</p>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('browse')">Browse</button>
+            <button class="tab" onclick="showTab('search')">Search</button>
+            <button class="tab" onclick="showTab('validate')">Validate</button>
+            <button class="tab" onclick="showTab('stats')">Statistics</button>
+        </div>
+        
+        <!-- Browse Tab -->
+        <div id="browse" class="tab-content active">
+            <div class="form-group">
+                <label for="district">Select District:</label>
+                <select id="district" onchange="loadAssemblies()">
+                    <option value="">-- Select District --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="assembly">Select Assembly Constituency:</label>
+                <select id="assembly" onchange="loadParts()" disabled>
+                    <option value="">-- Select Assembly --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="part">Select Part:</label>
+                <select id="part" disabled>
+                    <option value="">-- Select Part --</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="loadVoters()">Load Voters</button>
+            <button class="btn" onclick="exportData()" style="background: #28a745; margin-left: 10px;">Export CSV</button>
+            
+            <div id="browseResults" class="results"></div>
+        </div>
+        
+        <!-- Search Tab -->
+        <div id="search" class="tab-content">
+            <div class="form-group">
+                <label for="searchQuery">Search by Name or EPIC:</label>
+                <input type="text" id="searchQuery" placeholder="Enter name or EPIC number">
+            </div>
+            
+            <button class="btn" onclick="searchVoters()">Search</button>
+            
+            <div id="searchResults" class="results"></div>
+        </div>
+        
+        <!-- Validate Tab -->
+        <div id="validate" class="tab-content">
+            <div class="form-group">
+                <label for="validateAC">AC Number:</label>
+                <input type="number" id="validateAC" placeholder="e.g., 139">
+            </div>
+            
+            <div class="form-group">
+                <label for="validatePart">Part Number:</label>
+                <input type="number" id="validatePart" placeholder="e.g., 1">
+            </div>
+            
+            <div class="form-group">
+                <label for="sampleSize">Sample Size:</label>
+                <input type="number" id="sampleSize" value="10" placeholder="Number of voters to validate">
+            </div>
+            
+            <button class="btn" onclick="validatePart()">Validate</button>
+            
+            <div id="validateResults" class="results"></div>
+        </div>
+        
+        <!-- Stats Tab -->
+        <div id="stats" class="tab-content">
+            <button class="btn" onclick="loadStats()">Load Statistics</button>
+            
+            <div id="statsResults" class="stats-grid"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Load districts on page load
+        window.onload = function() {
+            fetch('/api/districts')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('district');
+                        data.data.forEach(d => {
+                            const option = document.createElement('option');
+                            option.value = d.districtNo || d.distNo;
+                            option.textContent = `${d.districtNo || d.distNo}. ${d.distName || d.districtName}`;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+        };
+        
+        // Load assemblies for selected district
+        function loadAssemblies() {
+            const district = document.getElementById('district').value;
+            const select = document.getElementById('assembly');
+            
+            select.innerHTML = '<option value="">-- Select Assembly --</option>';
+            select.disabled = !district;
+            
+            if (district) {
+                fetch(`/api/assemblies?district=${district}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.data.forEach(a => {
+                                const option = document.createElement('option');
+                                option.value = a.acNo;
+                                option.textContent = `${a.acNo}. ${a.acName}`;
+                                select.appendChild(option);
+                            });
+                        }
+                    });
+            }
+        }
+        
+        // Load parts for selected assembly
+        function loadParts() {
+            const ac = document.getElementById('assembly').value;
+            const select = document.getElementById('part');
+            
+            select.innerHTML = '<option value="">-- Select Part --</option>';
+            select.disabled = !ac;
+            
+            if (ac) {
+                fetch(`/api/parts/${ac}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.data.forEach(p => {
+                                const option = document.createElement('option');
+                                option.value = p.partNo;
+                                option.textContent = `Part ${p.partNo} - ${p.partName || ''}`;
+                                select.appendChild(option);
+                            });
+                        }
+                    });
+            }
+        }
+        
+        // Load voters
+        function loadVoters(page = 1) {
+            const ac = document.getElementById('assembly').value;
+            const part = document.getElementById('part').value;
+            const results = document.getElementById('browseResults');
+            
+            if (!ac || !part) {
+                results.innerHTML = '<div class="error">Please select AC and Part</div>';
+                return;
+            }
+            
+            results.innerHTML = '<div class="loading">Loading voters...</div>';
+            
+            fetch(`/api/voters/${ac}/${part}?page=${page}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const { metadata, voters, pagination } = data.data;
+                        
+                        let html = `<h2>AC ${metadata.ac_number}, Part ${metadata.part_number}</h2>`;
+                        html += `<p>Total voters: ${metadata.total_voters}</p>`;
+                        
+                        voters.forEach(v => {
+                            html += `
+                                <div class="voter-card">
+                                    <h3>${v.name || 'N/A'}</h3>
+                                    <div class="voter-info">
+                                        <div class="info-item">
+                                            <span class="info-label">Serial:</span>
+                                            <span>${v.serial_no || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">EPIC:</span>
+                                            <span>${v.epic_no || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Age:</span>
+                                            <span>${v.age || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Gender:</span>
+                                            <span>${v.gender || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Relation:</span>
+                                            <span>${v.relation_type || ''} ${v.relative_name || ''}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">House:</span>
+                                            <span>${v.house_no || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        // Pagination
+                        if (pagination.pages > 1) {
+                            html += '<div class="pagination">';
+                            for (let i = 1; i <= pagination.pages; i++) {
+                                html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadVoters(${i})">${i}</button>`;
+                            }
+                            html += '</div>';
+                        }
+                        
+                        results.innerHTML = html;
+                    } else {
+                        results.innerHTML = `<div class="error">${data.error}</div>`;
+                    }
+                })
+                .catch(e => {
+                    results.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+                });
+        }
+        
+        // Search voters
+        function searchVoters() {
+            const query = document.getElementById('searchQuery').value;
+            const results = document.getElementById('searchResults');
+            
+            if (!query) {
+                results.innerHTML = '<div class="error">Please enter search query</div>';
+                return;
+            }
+            
+            results.innerHTML = '<div class="loading">Searching...</div>';
+            
+            fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.data.length === 0) {
+                            results.innerHTML = '<div class="error">No results found</div>';
+                            return;
+                        }
+                        
+                        let html = `<h2>Found ${data.data.length} results</h2>`;
+                        
+                        data.data.forEach(item => {
+                            const v = item.voter;
+                            html += `
+                                <div class="voter-card">
+                                    <h3>${v.name || 'N/A'}</h3>
+                                    <p>AC ${item.ac_number}, Part ${item.part_number}</p>
+                                    <div class="voter-info">
+                                        <div class="info-item">
+                                            <span class="info-label">EPIC:</span>
+                                            <span>${v.epic_no || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Age:</span>
+                                            <span>${v.age || 'N/A'}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">Gender:</span>
+                                            <span>${v.gender || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        results.innerHTML = html;
+                    } else {
+                        results.innerHTML = `<div class="error">${data.error}</div>`;
+                    }
+                });
+        }
+        
+        // Validate part
+        function validatePart() {
+            const ac = document.getElementById('validateAC').value;
+            const part = document.getElementById('validatePart').value;
+            const sample = document.getElementById('sampleSize').value;
+            const results = document.getElementById('validateResults');
+            
+            if (!ac || !part) {
+                results.innerHTML = '<div class="error">Please enter AC and Part numbers</div>';
+                return;
+            }
+            
+            results.innerHTML = '<div class="loading">Validating...</div>';
+            
+            fetch(`/api/validate/${ac}/${part}?sample=${sample}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const report = data.data;
+                        results.innerHTML = `
+                            <div class="success">
+                                <h2>Validation Report</h2>
+                                <p><strong>Validated:</strong> ${report.validated} voters</p>
+                                <p><strong>Valid:</strong> ${report.valid}</p>
+                                <p><strong>Invalid:</strong> ${report.invalid}</p>
+                                <p><strong>Errors:</strong> ${report.errors}</p>
+                                <p><strong>Validation Rate:</strong> ${(report.validation_rate * 100).toFixed(1)}%</p>
+                                <p><strong>Average Match Score:</strong> ${report.avg_match_score.toFixed(2)}</p>
+                            </div>
+                        `;
+                    } else {
+                        results.innerHTML = `<div class="error">${data.error}</div>`;
+                    }
+                });
+        }
+        
+        // Load statistics
+        function loadStats() {
+            const results = document.getElementById('statsResults');
+            results.innerHTML = '<div class="loading">Loading statistics...</div>';
+            
+            fetch('/api/stats')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.data;
+                        results.innerHTML = `
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.total_files}</div>
+                                <div class="stat-label">Data Files</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.total_voters.toLocaleString()}</div>
+                                <div class="stat-label">Total Voters</div>
+                            </div>
+                        `;
+                    } else {
+                        results.innerHTML = `<div class="error">${data.error}</div>`;
+                    }
+                });
+        }
+        
+        // Export data
+        function exportData() {
+            const ac = document.getElementById('assembly').value;
+            const part = document.getElementById('part').value;
+            
+            if (!ac || !part) {
+                alert('Please select AC and Part');
+                return;
+            }
+            
+            window.location.href = `/api/export/${ac}/${part}?format=csv`;
+        }
+    </script>
+</body>
+</html>

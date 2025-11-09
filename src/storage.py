@@ -1,0 +1,352 @@
+"""
+Data Storage Module
+Handles storing voter data in JSON/YAML format
+"""
+
+import json
+import yaml
+import logging
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+from datetime import datetime
+import gzip
+
+
+class DataStorage:
+    """
+    Stores voter data in structured JSON/YAML format
+    """
+    
+    def __init__(self, config: Dict):
+        """
+        Initialize data storage
+        
+        Args:
+            config: Configuration dictionary
+        """
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+        
+        # Setup directories
+        self.output_dir = Path(config['directories']['output_dir'])
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Storage settings
+        storage_config = config.get('storage', {})
+        self.format = storage_config.get('format', 'json')
+        self.indent = storage_config.get('indent', 2)
+        self.ensure_ascii = storage_config.get('ensure_ascii', False)
+        self.pretty_print = storage_config.get('pretty_print', True)
+        self.compression = storage_config.get('compression', False)
+    
+    def save_voters(self, voters: List[Dict[str, Any]], 
+                   ac_number: int, part_number: int,
+                   metadata: Optional[Dict[str, Any]] = None) -> Path:
+        """
+        Save voter data to file
+        
+        Args:
+            voters: List of voter dictionaries
+            ac_number: AC number
+            part_number: Part number
+            metadata: Optional metadata
+            
+        Returns:
+            Path to saved file
+        """
+        # Build output structure
+        output_data = {
+            'metadata': {
+                'ac_number': ac_number,
+                'part_number': part_number,
+                'extraction_date': datetime.now().isoformat(),
+                'total_voters': len(voters),
+                'format_version': '1.0'
+            },
+            'voters': voters
+        }
+        
+        # Add custom metadata
+        if metadata:
+            output_data['metadata'].update(metadata)
+        
+        # Generate filename
+        filename = f"AC_{ac_number:03d}_Part_{part_number:03d}"
+        
+        # Save based on format
+        if self.format == 'yaml':
+            output_path = self.output_dir / f"{filename}.yaml"
+            self._save_yaml(output_data, output_path)
+        else:
+            output_path = self.output_dir / f"{filename}.json"
+            self._save_json(output_data, output_path)
+        
+        self.logger.info(f"Saved {len(voters)} voters to {output_path}")
+        return output_path
+    
+    def _save_json(self, data: Dict[str, Any], filepath: Path) -> None:
+        """
+        Save data as JSON
+        
+        Args:
+            data: Data to save
+            filepath: Output file path
+        """
+        # Determine indent
+        indent = self.indent if self.pretty_print else None
+        
+        json_str = json.dumps(
+            data,
+            indent=indent,
+            ensure_ascii=self.ensure_ascii
+        )
+        
+        # Save with optional compression
+        if self.compression:
+            filepath = filepath.with_suffix('.json.gz')
+            with gzip.open(filepath, 'wt', encoding='utf-8') as f:
+                f.write(json_str)
+        else:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(json_str)
+    
+    def _save_yaml(self, data: Dict[str, Any], filepath: Path) -> None:
+        """
+        Save data as YAML
+        
+        Args:
+            data: Data to save
+            filepath: Output file path
+        """
+        # Save with optional compression
+        if self.compression:
+            filepath = filepath.with_suffix('.yaml.gz')
+            with gzip.open(filepath, 'wt', encoding='utf-8') as f:
+                yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
+        else:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
+    
+    def load_voters(self, filepath: Path) -> Dict[str, Any]:
+        """
+        Load voter data from file
+        
+        Args:
+            filepath: Path to data file
+            
+        Returns:
+            Dictionary containing voter data
+        """
+        filepath = Path(filepath)
+        
+        # Check if compressed
+        is_compressed = filepath.suffix == '.gz'
+        
+        # Determine format
+        if '.yaml' in filepath.name:
+            return self._load_yaml(filepath, is_compressed)
+        else:
+            return self._load_json(filepath, is_compressed)
+    
+    def _load_json(self, filepath: Path, compressed: bool = False) -> Dict[str, Any]:
+        """
+        Load JSON file
+        
+        Args:
+            filepath: Path to JSON file
+            compressed: Whether file is gzip compressed
+            
+        Returns:
+            Loaded data
+        """
+        if compressed:
+            with gzip.open(filepath, 'rt', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    
+    def _load_yaml(self, filepath: Path, compressed: bool = False) -> Dict[str, Any]:
+        """
+        Load YAML file
+        
+        Args:
+            filepath: Path to YAML file
+            compressed: Whether file is gzip compressed
+            
+        Returns:
+            Loaded data
+        """
+        if compressed:
+            with gzip.open(filepath, 'rt', encoding='utf-8') as f:
+                return yaml.safe_load(f)
+        else:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return yaml.safe_load(f)
+    
+    def save_validation_report(self, report: Dict[str, Any], 
+                              ac_number: int, part_number: int) -> Path:
+        """
+        Save validation report
+        
+        Args:
+            report: Validation report dictionary
+            ac_number: AC number
+            part_number: Part number
+            
+        Returns:
+            Path to saved report
+        """
+        filename = f"AC_{ac_number:03d}_Part_{part_number:03d}_validation"
+        output_path = self.output_dir / f"{filename}.json"
+        
+        report['metadata'] = {
+            'ac_number': ac_number,
+            'part_number': part_number,
+            'validation_date': datetime.now().isoformat()
+        }
+        
+        self._save_json(report, output_path)
+        self.logger.info(f"Saved validation report to {output_path}")
+        
+        return output_path
+    
+    def save_statistics(self, stats: Dict[str, Any], 
+                       ac_number: Optional[int] = None) -> Path:
+        """
+        Save statistics report
+        
+        Args:
+            stats: Statistics dictionary
+            ac_number: Optional AC number (None for all)
+            
+        Returns:
+            Path to saved statistics
+        """
+        if ac_number:
+            filename = f"AC_{ac_number:03d}_statistics.json"
+        else:
+            filename = "west_bengal_statistics.json"
+        
+        output_path = self.output_dir / filename
+        
+        stats['metadata'] = {
+            'generated_date': datetime.now().isoformat()
+        }
+        
+        self._save_json(stats, output_path)
+        self.logger.info(f"Saved statistics to {output_path}")
+        
+        return output_path
+    
+    def organize_by_district(self, ac_number: int, district_number: int) -> Path:
+        """
+        Organize output files by district structure
+        
+        Args:
+            ac_number: AC number
+            district_number: District number
+            
+        Returns:
+            Path to district directory
+        """
+        district_dir = self.output_dir / f"District_{district_number:02d}"
+        ac_dir = district_dir / f"AC_{ac_number:03d}"
+        ac_dir.mkdir(parents=True, exist_ok=True)
+        
+        return ac_dir
+    
+    def export_to_csv(self, voters: List[Dict[str, Any]], 
+                     output_path: Path) -> None:
+        """
+        Export voter data to CSV format
+        
+        Args:
+            voters: List of voter dictionaries
+            output_path: Output CSV file path
+        """
+        import csv
+        
+        if not voters:
+            self.logger.warning("No voters to export")
+            return
+        
+        # Get all field names
+        fieldnames = list(voters[0].keys())
+        
+        with open(output_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(voters)
+        
+        self.logger.info(f"Exported {len(voters)} voters to CSV: {output_path}")
+    
+    def export_to_excel(self, voters: List[Dict[str, Any]], 
+                       output_path: Path) -> None:
+        """
+        Export voter data to Excel format
+        
+        Args:
+            voters: List of voter dictionaries
+            output_path: Output Excel file path
+        """
+        try:
+            import pandas as pd
+            
+            df = pd.DataFrame(voters)
+            df.to_excel(output_path, index=False, engine='openpyxl')
+            
+            self.logger.info(f"Exported {len(voters)} voters to Excel: {output_path}")
+        
+        except ImportError:
+            self.logger.error("pandas and openpyxl required for Excel export")
+            raise
+    
+    def create_index(self, directory: Optional[Path] = None) -> Dict[str, Any]:
+        """
+        Create an index of all stored data files
+        
+        Args:
+            directory: Directory to index (default: output_dir)
+            
+        Returns:
+            Index dictionary
+        """
+        if directory is None:
+            directory = self.output_dir
+        
+        index = {
+            'created': datetime.now().isoformat(),
+            'files': [],
+            'total_files': 0,
+            'total_voters': 0
+        }
+        
+        # Find all data files
+        for filepath in directory.glob('**/*.json'):
+            if 'validation' not in filepath.name and 'statistics' not in filepath.name:
+                try:
+                    data = self.load_voters(filepath)
+                    
+                    file_info = {
+                        'path': str(filepath.relative_to(directory)),
+                        'ac_number': data['metadata'].get('ac_number'),
+                        'part_number': data['metadata'].get('part_number'),
+                        'total_voters': data['metadata'].get('total_voters'),
+                        'extraction_date': data['metadata'].get('extraction_date')
+                    }
+                    
+                    index['files'].append(file_info)
+                    index['total_files'] += 1
+                    index['total_voters'] += file_info['total_voters']
+                
+                except Exception as e:
+                    self.logger.warning(f"Error indexing {filepath}: {e}")
+        
+        # Save index
+        index_path = directory / 'index.json'
+        with open(index_path, 'w', encoding='utf-8') as f:
+            json.dump(index, f, indent=2)
+        
+        self.logger.info(f"Created index with {index['total_files']} files")
+        return index
