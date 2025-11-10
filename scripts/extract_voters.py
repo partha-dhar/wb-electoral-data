@@ -47,8 +47,12 @@ def extract_ac_directory(ac_dir: Path, config: dict) -> list:
     """Extract voters from all PDFs in AC directory"""
     logger = logging.getLogger(__name__)
     
-    # Find all PDF files
+    # Find all PDF files (support both flat structure and PS subdirectories)
     pdf_files = sorted(ac_dir.glob('*.pdf'))
+    
+    # If no PDFs in AC root, check PS subdirectories
+    if not pdf_files:
+        pdf_files = sorted(ac_dir.glob('PS_*/*.pdf'))
     
     if not pdf_files:
         logger.warning(f"No PDF files found in {ac_dir}")

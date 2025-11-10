@@ -5,7 +5,107 @@ This project downloads, validates, and extracts voter data from West Bengal elec
 
 ---
 
-## 📁 Directory Structure & Organization
+## � CRITICAL: Directory Path & Terminal Management
+
+### Absolute Directory Paths
+**ALWAYS use correct directory paths:**
+
+```bash
+# Base Directory (User workspace)
+BASE_DIR="$HOME/Desktop/sir26"                        # ~/Desktop/sir26/
+
+# Git Repository (Where code lives)
+REPO_DIR="$HOME/Desktop/sir26/wb-electoral-data"      # ~/Desktop/sir26/wb-electoral-data/
+
+# CRITICAL: Before running ANY command, verify you're in the correct directory!
+```
+
+### Terminal Usage Rules
+**ALWAYS follow these terminal guidelines:**
+
+1. **Before EVERY terminal command, check/navigate to correct directory:**
+   ```bash
+   cd ~/Desktop/sir26/wb-electoral-data  # For git operations, scripts
+   cd ~/Desktop/sir26                     # For outer workspace operations
+   ```
+
+2. **NEVER interrupt long-running processes** (downloads, extractions, builds)
+   - Use NEW terminal for monitoring/other commands
+   - Let extraction/download complete in background
+   - Use `nohup` or background processes for overnight tasks
+
+3. **For long-running tasks, use background execution:**
+   ```bash
+   # ✅ GOOD - Run in background with logging
+   nohup python3 scripts/extract_voters.py --district 13 > /tmp/extraction.log 2>&1 &
+   
+   # ✅ GOOD - Use separate terminal for monitoring
+   # Terminal 1: Run extraction
+   # Terminal 2: Monitor progress (tail -f /tmp/extraction.log)
+   
+   # ❌ BAD - Block terminal and risk interruption
+   python3 scripts/long_running_task.py
+   ```
+
+4. **Always verify directory before operations:**
+   ```bash
+   # At start of every terminal session:
+   pwd                                  # Check current directory
+   cd ~/Desktop/sir26/wb-electoral-data # Navigate to repo
+   git status                           # Verify git repo
+   ```
+
+### Directory Structure
+```
+~/Desktop/sir26/                              # Base workspace
+├── .github/
+│   └── copilot-instructions.md              # THIS FILE (outer copy)
+├── wb-electoral-data/                        # Git repository
+│   ├── .github/
+│   │   └── copilot-instructions.md          # THIS FILE (repo copy)
+│   ├── .git/                                # Git metadata
+│   ├── data/                                # Data directory
+│   │   ├── downloaded_pdfs/                 # Downloaded PDFs
+│   │   ├── api_metadata/                    # API metadata
+│   │   └── electoral_roll.db                # SQLite database
+│   ├── scripts/                             # Universal scripts
+│   ├── docs/                                # Documentation
+│   └── README.md
+├── archive/                                  # Old/reference code
+└── [other workspace files]
+```
+
+---
+
+## 📋 INSTRUCTION FILE SYNCHRONIZATION
+
+### Dual Instruction Files
+**TWO identical instruction files MUST always be kept in sync:**
+
+1. **Outer File**: `~/Desktop/sir26/.github/copilot-instructions.md`
+2. **Repo File**: `~/Desktop/sir26/wb-electoral-data/.github/copilot-instructions.md`
+
+### Update Protocol
+**WHENEVER user provides new instructions:**
+
+1. ✅ Update BOTH instruction files with identical content
+2. ✅ Add new sections/rules to both files simultaneously
+3. ✅ Use same content, formatting, examples in both
+4. ✅ Verify synchronization after updates:
+   ```bash
+   diff ~/Desktop/sir26/.github/copilot-instructions.md \
+        ~/Desktop/sir26/wb-electoral-data/.github/copilot-instructions.md
+   # Should show NO differences
+   ```
+
+### Why Two Files?
+- **Outer file** (`sir26/.github/`): Available across entire workspace
+- **Repo file** (`wb-electoral-data/.github/`): Tracked in git, versioned
+- **Both must match**: Ensures consistency regardless of context
+
+---
+
+## �📁 Directory Structure & Organization
 
 ### Documentation Rules
 - **ALL documentation files MUST be placed in `./docs/`**
@@ -424,6 +524,71 @@ if __name__ == "__main__":
 - 🚀 Database creation and indexing
 - 🚀 API verification and cross-checking
 - 🚀 Analytics and reporting
+
+---
+
+## 📦 Archive Management
+
+### Archive Folder Review
+The `~/Desktop/sir26/archive/` folder contains development artifacts from initial project creation. **A complete backup ZIP has been created.**
+
+### What Was Extracted from Archive
+**ALL useful code has been integrated into main repo:**
+
+1. **CID Decoding Logic** ✅
+   - Source: `archive/old_scripts/extract_voter_data_final.py`
+   - Integrated into: `scripts/extract_voters_universal.py`
+   - Character mappings, CID codes fully documented
+
+2. **PDF Validation Approach** ✅
+   - Created: `scripts/validate_pdf_to_db.py`
+   - Validates DB records against actual PDFs
+   - Counts voters, spot-checks names/EPICs
+
+3. **Monitoring Scripts** ✅
+   - Updated: `scripts/monitor_extraction.sh`
+   - Based on archive monitoring utilities
+
+### Archive Cleanup Protocol
+**ALWAYS follow these steps when managing archive:**
+
+1. **Before Deleting Archive:**
+   ```bash
+   # Create timestamped backup
+   cd ~/Desktop/sir26
+   zip -r archive_backup_$(date +%Y%m%d).zip archive/
+   
+   # Verify ZIP created
+   ls -lh archive_backup_*.zip
+   ```
+
+2. **Review Archive Contents:**
+   - Check for useful code not yet extracted
+   - Look for documentation/notes worth preserving
+   - Identify any unique solutions to problems
+
+3. **Extract Useful Code:**
+   - Integrate into appropriate universal scripts
+   - Document source in code comments
+   - Add to `docs/ARCHIVE_REVIEW.md`
+
+4. **After Extraction:**
+   ```bash
+   # Safe to remove archive folder
+   rm -rf ~/Desktop/sir26/archive/
+   
+   # Keep ZIP backup for reference
+   mv archive_backup_*.zip ~/Desktop/sir26/backups/
+   ```
+
+### Archive Contents Summary
+See `docs/ARCHIVE_REVIEW.md` for complete list of:
+- Scripts extracted and integrated
+- Documentation preserved
+- Development artifacts archived
+- Lessons learned from iterative development
+
+**Status:** Archive reviewed November 10, 2025. All useful code extracted. Safe to delete folder (backup ZIP created).
 
 ---
 
