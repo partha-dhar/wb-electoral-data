@@ -94,7 +94,14 @@ def ensure_directories(config: Dict[str, Any]) -> None:
     directories = config.get('directories', {})
     
     for key, path in directories.items():
-        Path(path).mkdir(parents=True, exist_ok=True)
+        path_obj = Path(path)
+        # Skip if it's a file path (like db_path)
+        if key.endswith('_path') or key.endswith('.db'):
+            # Create parent directory only
+            path_obj.parent.mkdir(parents=True, exist_ok=True)
+        else:
+            # Create directory
+            path_obj.mkdir(parents=True, exist_ok=True)
 
 
 def get_session_with_ssl() -> requests.Session:
