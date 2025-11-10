@@ -80,6 +80,8 @@ For detailed analytics, see **[ANALYTICS.md](docs/ANALYTICS.md)**
 | Document | Description |
 |----------|-------------|
 | **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)** | Complete setup instructions, prerequisites, troubleshooting |
+| **[VALIDATION_REPORT.md](docs/VALIDATION_REPORT.md)** | PDF download validation report (100% complete - 7,936 PDFs) |
+| **[PDF_STRUCTURE.md](docs/PDF_STRUCTURE.md)** | PDF organization structure and naming conventions |
 | **[ANALYTICS.md](docs/ANALYTICS.md)** | Detailed statistics, performance metrics, data quality analysis |
 | **[API_VERIFICATION_GUIDE.md](docs/API_VERIFICATION_GUIDE.md)** | API verification system usage and reference |
 | **[IMPLEMENTATION_SUMMARY.md](docs/IMPLEMENTATION_SUMMARY.md)** | Implementation details and feature overview |
@@ -201,8 +203,30 @@ nano config/config.yaml
 
 #### 1. Download PDFs
 
+**New Universal Download Script** (Recommended):
+
 ```bash
-# Download all PDFs for a specific Assembly Constituency
+# List all available districts
+./scripts/download_electoral_rolls.sh --list-districts
+
+# List ACs in a district
+./scripts/download_electoral_rolls.sh --list-acs 13
+
+# Download entire district
+./scripts/download_electoral_rolls.sh --district 13
+
+# Download specific AC
+./scripts/download_electoral_rolls.sh --district 13 --ac 146
+
+# Example: Download Kolkata South
+./scripts/download_electoral_rolls.sh --district 13
+# Downloads 1,366 PDFs for 7 ACs in organized structure
+```
+
+**Legacy Python Scripts** (Still available):
+
+```bash
+# Download for specific Assembly Constituency
 python scripts/download_pdfs.py --ac 139
 
 # Download for entire district
@@ -212,7 +236,24 @@ python scripts/download_pdfs.py --district 10
 python scripts/download_pdfs.py --all
 ```
 
-#### 2. Extract Voter Data
+#### 2. Validate Downloads
+
+**Validate PDFs against metadata** (Checks existence, readability, completeness):
+
+```bash
+# Validate all downloaded districts
+./scripts/validate_downloads.sh
+
+# Check validation results
+cat docs/VALIDATION_REPORT.md
+```
+
+**Current Status:**
+- ✅ District 9 (North 24 Parganas): 6,570 PDFs - 100% validated
+- ✅ District 13 (Kolkata South): 1,366 PDFs - 100% validated
+- ✅ **Total: 7,936 PDFs across 35 ACs**
+
+#### 3. Extract Voter Data
 
 ```bash
 # Extract from specific AC
@@ -220,9 +261,12 @@ python scripts/extract_voters.py --ac 139
 
 # Batch extract all downloaded PDFs
 python scripts/extract_voters.py --batch
+
+# Extract specific district
+python scripts/extract_voters.py --district 13
 ```
 
-#### 3. Validate Data
+#### 4. Validate Extracted Data
 
 ```bash
 # Validate extracted data against ECI API
@@ -404,10 +448,11 @@ Contributions are welcome! We appreciate help with:
 
 **Before contributing**, please:
 1. Read **[SETUP_GUIDE.md](docs/SETUP_GUIDE.md)** for development setup
-2. Check existing issues and pull requests
-3. Follow the coding standards (PEP 8, Black formatting)
-4. Add tests for new features
-5. Update documentation accordingly
+2. **Review [GitHub Copilot Instructions](.github/copilot-instructions.md)** for project guidelines and best practices
+3. Check existing issues and pull requests
+4. Follow the coding standards (PEP 8, Black formatting)
+5. Add tests for new features
+6. Update documentation accordingly
 
 **Contribution Process**:
 1. Fork the repository
